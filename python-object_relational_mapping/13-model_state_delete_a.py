@@ -1,24 +1,42 @@
 #!/usr/bin/python3
 """
-Changes the name of the State object where id=2 to New Mexico from a database
+This script deletes all State objects with a name containing the letter 'a'
+from the database hbtn_0e_6_usa using SQLAlchemy ORM.
 """
 
-import sqlalchemy
+import sys
+from model_state import Base, State
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sys import argv
-from model_state import Base, State
+
+
+def delete_states_with_a():
+    """
+    Connects to MySQL database using SQLAlchemy and deletes all State objects
+    that contain the letter 'a' in their name.
+    """
+    # Get command line arguments
+    username = sys.argv[1]
+    password = sys.argv[2]
+    database = sys.argv[3]
+
+    # Create engine to connect to MySQL server
+    engine = create_engine('mysql+mysqldb://{}:{}@localhost:3306/{}'.format(
+        username, password, database), pool_pre_ping=True)
+
+    # Create session
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
+    # Delete all State objects that contain the letter 'a'
+    session.query(State).filter(State.name.contains('a')).delete()
+
+    # Commit the changes
+    session.commit()
+
+    # Close session
+    session.close()
 
 
 if __name__ == "__main__":
-    eng = create_engine('mysql+mysqldb://{}:{}@localhost/{}'.format(argv[1],
-                                                                    argv[2],
-                                                                    argv[3]))
-    Base.metadata.create_all(eng)
-    Session = sessionmaker(bind=eng)
-    session = Session()
-    states = session.query(State).filter(State.name.like('%a%'))
-    for state in states:
-        session.delete(state)
-    session.commit()
-    session.close()
+    delete_states_with_a()
